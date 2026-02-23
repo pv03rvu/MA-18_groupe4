@@ -109,6 +109,7 @@ if (-not (Test-WSMan -ComputerName $Target -ErrorAction SilentlyContinue)) {
 Write-Host "Connexion à $Target et récupération des services en cours..." -ForegroundColor Cyan
 try {
     $runningServices = Invoke-Command -ComputerName $Target -Credential $Cred -ScriptBlock {
+    
         Get-Service | Where-Object { $_.Status -eq 'Running' } |
             Sort-Object -Property DisplayName |
             Select-Object DisplayName, Name, Status, StartType
@@ -119,12 +120,18 @@ try {
 }
 catch {
     Write-Error "Échec de l'exécution à distance sur $Target : $($_.Exception.Message)"
+    
     return
 }
 
 # === Export optionnel ===
+
 $timestamp = Get-Date -Format 'yyyyMMdd_HHmm'
+
 $outFile   = ".\services_en_cours_$($Target)_$timestamp.csv"
+
 $runningServices | Export-Csv -Path $outFile -NoTypeInformation -Encoding UTF8
+
 Write-Host "Export effectué : $outFile" -ForegroundColor Green
+
 
