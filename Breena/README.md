@@ -39,15 +39,65 @@ Get-CimInstance Win32_Processor | Select-Object Name, LoadPercentage
 
 #### DISK USAGE AND PC NAME
 ```powershell
-SOLUTION DISK HERE
+Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" | Select-Object DeviceID, Size, FreeSpace
 ```
 ```powershell
-SOLUTION PC NAME HERE
+Get-CimInstance Win32_ComputerSystem | Select-Object Name
 ```
 
 ### Real Exercise (Concept) solution
 ```powershell
-SOLUTION HERE
+# WindowsFetch.ps1
+
+# This parameter allows the user to specify an IP or hostname. 
+# If nothing is typed, it targets the local PC ("localhost").
+param (
+    [string]$TargetPC = "localhost"
+)
+
+try {
+    # Set up parameters to pass to our CIM queries
+    $cimParams = @{ ErrorAction = "Stop" }
+    if ($TargetPC -ne "localhost") {
+        $cimParams.Add("ComputerName", $TargetPC)
+    }
+
+    # 1. Fetching the Data
+    $sys  = Get-CimInstance Win32_ComputerSystem @cimParams
+    $os   = Get-CimInstance Win32_OperatingSystem @cimParams
+    $cpu  = Get-CimInstance Win32_Processor @cimParams
+    $disks = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" @cimParams
+
+    # 2. Calculating RAM (Win32_OperatingSystem returns KB, so we divide by 1MB to get GB)
+    $totalRamGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 2)
+    $freeRamGB  = [math]::Round($os.FreePhysicalMemory / 1MB, 2)
+    $usedRamGB  = $totalRamGB - $freeRamGB
+
+    # 3. Formatting CPU (Handling potential dual-CPU setups and grabbing load percentage)
+    $cpuName = ($cpu.Name) -join ", "
+    $cpuLoad = ($cpu | Measure-Object -Property LoadPercentage -Average).Average
+
+    # 4. Displaying the Output (Neofetch/Fastfetch style)
+    Write-Host ""
+    Write-Host "   _  _        " -ForegroundColor Cyan -NoNewline; Write-Host "$($os.CSName)" -ForegroundColor White
+    Write-Host "  | || |       " -ForegroundColor Cyan -NoNewline; Write-Host "--------------------" -ForegroundColor Gray
+    Write-Host "  | || |       " -ForegroundColor Cyan -NoNewline; Write-Host "OS:   " -ForegroundColor Cyan -NoNewline; Write-Host "$($os.Caption)"
+    Write-Host "  | || |       " -ForegroundColor Cyan -NoNewline; Write-Host "CPU:  " -ForegroundColor Cyan -NoNewline; Write-Host "$cpuName ($cpuLoad% Load)"
+    Write-Host "   \__/        " -ForegroundColor Cyan -NoNewline; Write-Host "RAM:  " -ForegroundColor Cyan -NoNewline; Write-Host "$usedRamGB GB / $totalRamGB GB"
+    
+    # Loop through each disk to calculate Bytes to GB and display
+    foreach ($disk in $disks) {
+        $totalDiskGB = [math]::Round($disk.Size / 1GB, 2)
+        $freeDiskGB  = [math]::Round($disk.FreeSpace / 1GB, 2)
+        $usedDiskGB  = $totalDiskGB - $freeDiskGB
+        
+        Write-Host "               " -NoNewline; Write-Host "Disk ($($disk.DeviceID)): " -ForegroundColor Cyan -NoNewline; Write-Host "$usedDiskGB GB / $totalDiskGB GB"
+    }
+    Write-Host ""
+
+} catch {
+    Write-Error "Could not connect to $TargetPC. Please check if the IP is correct and if WinRM is enabled on the target."
+}
 ```
 
 ## Testing Platform
