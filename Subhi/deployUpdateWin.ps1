@@ -17,10 +17,11 @@ for ($passage = 1; $passage -le 4; $passage++) {
         
        
         if ($passage -eq 4) {
-            Write-Host "ÉCHEC FINAL : Le PC n'a pas répondu après 4 tentatives." -ForegroundColor Yellow
+            Write-Host "ÉCHEC FINAL : Après 4 tentatives tu est l'erreur ." -ForegroundColor Yellow
         } else {
             
             Start-Sleep -Seconds 2 
         }
     }
 }
+
