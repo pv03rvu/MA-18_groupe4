@@ -124,25 +124,41 @@ Utile pour audit, rapport, ou preuve d’exécution.
 - Liste des services en cours d’exécution sur la machine distante.
 - Fichier CSV exporté contenant ces informations.
 - Script fonctionnel avec vérification WinRM, authentification et gestion d’erreurs.
+
 # 9 Corrigé : 
+
 # === Paramètres ===
+
 $Target = 'PC01'             # Nom NetBIOS, FQDN, ou adresse IP
+
 $Cred   = Get-Credential     # Identifiants ayant les droits sur la machine distante
 
  # === Vérifications (rapides) ===
+ 
 Write-Host "Vérification de la disponibilité WinRM sur $Target..." -ForegroundColor Cyan
-if (-not (Test-WSMan -ComputerName $Target -ErrorAction SilentlyContinue)) {
+
+if (-not (Test-WSMan -ComputerName $Target -ErrorAction SilentlyContinue))
+
+{
+
     Write-Error "WinRM indisponible ou inaccessible sur $Target. Vérifie Enable-PSRemoting, le pare-feu et la connectivité."
+    
     return
 }
 
 # === Exécution distante ===
+
 Write-Host "Connexion à $Target et récupération des services en cours..." -ForegroundColor Cyan
+
 try {
     $runningServices = Invoke-Command -ComputerName $Target -Credential $Cred -ScriptBlock {
+    
         Get-Service | Where-Object { $_.Status -eq 'Running' } |
+        
             Sort-Object -Property DisplayName |
+            
             Select-Object DisplayName, Name, Status, StartType
+            
     } -ErrorAction Stop
 
     # Affichage lisible
@@ -150,11 +166,18 @@ try {
 }
 catch {
     Write-Error "Échec de l'exécution à distance sur $Target : $($_.Exception.Message)"
+    
     return
+
 }
 
 # === Export optionnel ===
+
 $timestamp = Get-Date -Format 'yyyyMMdd_HHmm'
+
 $outFile   = ".\services_en_cours_$($Target)_$timestamp.csv"
+
 $runningServices | Export-Csv -Path $outFile -NoTypeInformation -Encoding UTF8
+
 Write-Host "Export effectué : $outFile" -ForegroundColor Green
+
