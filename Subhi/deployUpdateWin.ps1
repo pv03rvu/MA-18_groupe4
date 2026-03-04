@@ -2,9 +2,9 @@
 
 <#
 .SYNOPSIS
-    Deployment de mise à jours windows a distance  
+    Deploiment de mise à jours windows a distance  
 .DESCRIPTION
-    demande a l'ordinateur cible si il est present si oui il se connecte, si y a besoin de mise à joue il la deploie 
+    Demande a l'ordinateur cible si il est present si oui il se connecte, si y a besoin de mise à joue il la deploie 
 .AUTHOR
     Chalhoub Subhi
 .VERSION
@@ -12,22 +12,24 @@
 #>
 
 
-$pcCible = "10.229.32.51"
-$succes = $false
+$target = "10.229.32.51"
+$success = $false
 
-for ($passage = 1; $passage -le 4; $passage++) {
-    Write-Host "Passage $passage : Test de la connectivité pour $pcCible..."
+
+function PingTarget {
+for ($i = 1; $i -le 4; $i++) { #TODO: 
+Write-Host "Passage $i : Test de la connectivité pour $target..." #TODO: put all masseges in ENGLISH PLEASE (*/ω＼*)
     
     
-    if (Test-Connection -ComputerName $pcCible -Count 1 -Quiet) {
-        Write-Host " Le PC est en vie !" -ForegroundColor Green
-        $succes = $true
+    if (Test-Connection -ComputerName $target -Count 1 -Quiet) { #TODO: put all the "if" in one function 
+        Write-Host " the PC is dead !!!!" -ForegroundColor Green 
+        $success = $true
         break 
     } else {
         Write-Host "Le PC est mort." -ForegroundColor red
         
        
-        if ($passage -eq 4) {
+        if ($i -eq 4) {
             Write-Host "ÉCHEC FINAL : Après 4 tentatives tu est l'erreur ." -ForegroundColor Yellow
         } else {
             
@@ -35,5 +37,19 @@ for ($passage = 1; $passage -le 4; $passage++) {
         }
     }
 }
+
+}
+
+function ConnectToTarget {
+# TODO: connect to target, if it can't connect, send error message
+# TODO: otherwise, continue the script.   
+}
+# TODO: do all the todo about the other function and the TODO
+PingTarget
+
+ConnectToTarget
+
+
+
 
 
